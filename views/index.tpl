@@ -7,6 +7,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="">
     <meta name="author" content="">
+		<script src="/static/js/sjcl.js"></script>
+	<script src="/static/js/login.js"></script>
+	<script src="/static/js/vote.js"></script>
+
 
     <title>PetBay</title>
 
@@ -53,9 +57,12 @@
                     <li>
                         <a href="/profile">Profile</a>
                     </li>
+					<li>
+						<a data-toggle="modal" href="#regModal" data-backdrop="true" >Register</a>
+					</li>
                 </ul>
 				<!--http://bootsnipp.com/snippets/featured/horizontal-login-form-in-navbar-with-prepend-->
-				
+				% if email is None:
 				<form id="signin" class="navbar-form navbar-right" role="form">
 					<div class="input-group">
 						<span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
@@ -67,14 +74,40 @@
 						<input id="password" type="password" class="form-control" name="password" value="" placeholder="Password">                                        
 					</div>
 
-					<button type="submit" class="btn btn-primary">Login</button>
+					<button type="submit" onclick="login1(event)" class="btn btn-primary">Login</button>
 				</form>
+				% else:
+				{{email}}
+				% end
 				
             </div>
             <!-- /.navbar-collapse -->
         </div>
         <!-- /.container -->	
     </nav>
+	
+	<!--http://bootsnipp.com/snippets/8VmZ-->
+	<div id="regModal" class="modal fade" role="dialog" tabindex="-1" aria-labelledby="myModalLabel" aria-hidden="true">
+		<div class="modal-dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+			<div class="modal-content">
+				<div class="modal-header">
+					<legend> 
+						<img style="max-width:75px; margin-top: -7px;"src="/static/css/aww/logo.png">&nbsp;&nbsp;&nbsp;Sign up!
+					</legend>
+				</div>
+				<div id="entry_fields" class="modal-body">
+					<form id="regForm" class="form" role="form">
+						<input id="newEmail" class="form-control" name="email" placeholder="Your Email" type="email" />
+						<input id="reNewEmail" class="form-control" name="reenteremail" placeholder="Re-enter Email" type="email" />
+						<input id="newPass" class="form-control" name="password" placeholder="New Password" type="password" />
+						<input id="reNewPass" class="form-control" name="reenterpassword" placeholder="Re-enter Password" type="password" />
+
+						<button class="btn btn-lg btn-primary btn-block" onclick="register(event)" type="submit">Sign up</button>	
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
 
     <!-- Page Content -->
     <div class="container">
@@ -110,14 +143,15 @@
 					Sign up</button>
 				</form>
 			</div>-->
-			% for pic in pics:
+			% for picid in pics:
+			% 	pic = pics[picid]
             <div class="col-lg-3 col-md-4 col-xs-6 thumb">
 				<div class="thumbnail">
 					<a class="thumbnail" href="#">
-						<img class="img-responsive" src="/static/css/aww/cat1.jpg" style="height:200px; object-fit:cover" alt="">
+						<img class="img-responsive" src="/pic/thumb/{{picid}}" style="height:200px; object-fit:cover" alt="">
 					</a>
-					Meows:
-					<button type="button" class="btn btn-default btn-xs">
+					Cuddles:{{pic["votes"]}}
+					<button type="button" onclick="upvote('{{picid}}')" class="btn btn-default btn-xs">
 						<span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>
 					</button>
 					<button type="button" class="btn btn-default btn-xs">
@@ -129,11 +163,11 @@
         </div>
 		
 		<ul class="pagination pagination-sm">
-		  <li><a href="index.html?page=1">1</a></li>
-		  <li><a href="index.html?page=2">2</a></li>
-		  <li><a href="index.html?page=3">3</a></li>
-		  <li><a href="index.html?page=4">4</a></li>
-		  <li><a href="index.html?page=5">5</a></li>
+		  <li><a href="?page=1">1</a></li>
+		  <li><a href="?page=2">2</a></li>
+		  <li><a href="?page=3">3</a></li>
+		  <li><a href="?page=4">4</a></li>
+		  <li><a href="?page=5">5</a></li>
 		</ul>
 		
         <hr>
@@ -151,10 +185,10 @@
     <!-- /.container -->
 
     <!-- jQuery -->
-    <script src="js/jquery.js"></script>
+    <script src="/static/js/jquery.js"></script>
 
     <!-- Bootstrap Core JavaScript -->
-    <script src="js/bootstrap.min.js"></script>
+    <script src="/static/js/bootstrap.min.js"></script>
 
 </body>
 

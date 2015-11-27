@@ -6,6 +6,12 @@
 
 body {
     padding-top: 20px; /* Required padding for .navbar-fixed-top. Change if height of navigation changes. */
+	
+	background: url('/static/css/back/rustic_paper.jpg') no-repeat center center fixed; 
+	-webkit-background-size: cover;
+	-moz-background-size: cover;
+	-o-background-size: cover;
+	background-size: cover;
 }
 
 .thumb {

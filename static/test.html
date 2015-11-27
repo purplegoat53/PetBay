@@ -1,7 +1,8 @@
 <html>
-	<form action="/ajax/register" method="POST">
+	<form action="/ajax/register" method="POST" enctype="multipart/form-data">
 		<input type="text" name="email">
 		<input type="password" name="password">
+		<input type="file" name="upload">
 		<input type="submit" value="Register">
 	</form>
 	
@@ -11,8 +12,18 @@
 		<input type="submit" value="Login">
 	</form>
 	
-	<form action="/ajax/upload" method="POST">
+	<form action="/ajax/upload" method="POST" enctype="multipart/form-data">
 		<input type="file" name="upload">
 		<input type="submit" value="Upload">
+	</form>
+	
+	<form action="/ajax/vote/up" method="POST">
+		<input type="text" name="picid">
+		<input type="submit" value="Vote Up">
+	</form>
+	
+	<form action="/ajax/vote/down" method="POST">
+		<input type="text" name="picid">
+		<input type="submit" value="Vote Down">
 	</form>
 </html>
