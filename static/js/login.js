@@ -22,7 +22,12 @@ function login1(event) {
 		}
 		else
 		{
-			document.getElementById("signin").innerHTML = "<div><h5><font color='White'>Welcome: " + email + "!</font></h5></div>"
+			document.getElementById("signin").innerHTML = ""
+			 $('#experiment').load('/ajax/welcome');
+			 //$('#experiment').modal('show');
+			 $('#experiment').modal();
+			 //$('#exModal').modal('show');
+			 //$('#experiment').modal('toggle');
 		}
     });
 }
@@ -55,6 +60,17 @@ function register(event) {
     function(data, status){
         alert("Data: " + data.status + "\nStatus: " + status);	
 		document.getElementById("entry_fields").innerHTML = "<div><p><font color='Black'>Registration Successful!\nYou can now login with your detials!</font></p></div>"
+    });
+	}
+}
+
+function logout(event) {
+	$.post("/ajax/logout",
+    {
+
+    },
+    function(data, status){
+        alert("Data: " + data.status + "\nStatus: " + status);	
     });
 	}
 }

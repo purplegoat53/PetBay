@@ -6,6 +6,6 @@ function upvote(picid) {
         picid : picid
     },
     function(data, status){
-        alert("Data: " + data.status + "\nStatus: " + status);
+        alert("Data: " + data.message + "\nStatus: " + status);
     });
 }

@@ -7,7 +7,7 @@ import cassandra, time, random, hashlib, mimetypes, uuid, StringIO, functools, o
 def setup_db(cassandra):
 	session = cassandra.getsession()
 	session.execute("create keyspace if not exists PetBay with replication = {'class':'SimpleStrategy', 'replication_factor': 1};")
-	session.execute("create table if not exists PetBay.User(email text primary key, password text, picids set<uuid>, profile_data blob, profile_mime text)")
+	session.execute("create table if not exists PetBay.User(email text primary key, password text, picids set<uuid>, walloffame_picids set<uuid>, profile_data blob, profile_mime text, description text)")
 	session.execute("create table if not exists PetBay.Pic(picid uuid primary key, user_email text, data blob, data_thumb blob, mime text, time_added bigint)")
 	session.execute("create table if not exists PetBay.WallOfFame(picid uuid primary key, user_email text, data blob, mime text, time_added bigint)")
 	session.execute("create table if not exists PetBay.Votes(picid uuid primary key, votes_up counter, votes_down counter)")
@@ -101,7 +101,8 @@ def get_profile(db, email, user=None):
 	if len(rows) <= 0:
 		return abort(404)
 	
-	return {"email": user}
+	row, = rows
+	return {"email": user, "description": row["description"], "walloffame_picids": row["walloffame_picids"]}
 
 @route("/ajax/login", method="POST")
 def perform_login(db):
@@ -305,11 +306,20 @@ def perform_vote(vote, db, email):
 		
 	return {"status": "OK"}
 
-#@set_interval(120)
-#def move_to_halloffame():
-#	""" cron job, moves about to expire sucessful new
-#		hall of fame entries to the hall of fame """
-#	print "move"
+@route("/ajax/welcome")
+@view("welcome")
+@get_user
+def get_welcome(db, email):
+	return {"email": email}
+
+@set_interval(120)
+def move_to_halloffame(db):
+	""" cron job, moves about to expire sucessful new
+		hall of fame entries to the hall of fame """
+		
+	# grab all the pics and their ttl
+	rows = db.execute("select picid, ttl(data) from PetBay.Pic")
+	rows = filter(lambda row: row["ttl(data)"] < 240, rows)
 	
 if __name__ == "__main__":
 	from cassandraplugin import CassandraPlugin
@@ -317,10 +327,9 @@ if __name__ == "__main__":
 	install(cassandra_plugin)
 	setup_db(cassandra_plugin)
 	
-	#stop_mover = move_to_halloffame()
+	stop_mover = move_to_halloffame(cassandra_plugin.getsession())
 	
 	try:
 		run(server="waitress", host='0.0.0.0', port=8080, debug=True)
 	finally:
-		pass
-		#stop_mover.set()
+		stop_mover.set()

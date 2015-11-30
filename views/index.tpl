@@ -85,7 +85,7 @@
         </div>
         <!-- /.container -->	
     </nav>
-	
+	<div id="experiment" class="modal fade" role="dialog" tabindex="-1" aria-labelledby="myModalLabel" aria-hidden="true"></div>
 	<!--http://bootsnipp.com/snippets/8VmZ-->
 	<div id="regModal" class="modal fade" role="dialog" tabindex="-1" aria-labelledby="myModalLabel" aria-hidden="true">
 		<div class="modal-dialog" aria-labelledby="myModalLabel" aria-hidden="true">
