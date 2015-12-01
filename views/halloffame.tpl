@@ -7,8 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="">
     <meta name="author" content="">
-	<script src="/static/js/jquery.js"></script>
-	<script src="/static/js/sjcl.js"></script>
+		<script src="/static/js/sjcl.js"></script>
 	<script src="/static/js/login.js"></script>
 	<script src="/static/js/vote.js"></script>
 	
@@ -58,11 +57,9 @@
                     <li>
                         <a href="/profile">Profile</a>
                     </li>
-					% if email is None:
 					<li>
 						<a data-toggle="modal" href="#regModal" data-backdrop="true" >Register</a>
 					</li>
-					% end
                 </ul>
 				<!--http://bootsnipp.com/snippets/featured/horizontal-login-form-in-navbar-with-prepend-->
 				% if email is None:
@@ -82,7 +79,6 @@
 				% else:
 				<form id="signout" class="navbar-form navbar-right" role="form" style="color:azure">
 					Logged in as:&nbsp;{{email}}
-					<button type="submit" onclick="showUp(event)" class="btn btn-primary">Upload</button>
 					<button type="submit" onclick="logout(event)" class="btn btn-primary">Logout</button>
 				</form>
 				% end				
@@ -102,9 +98,21 @@
                 <h1 class="page-header">The Cuddliest of All Times</h1>
             </div>
 
-			% for pic in pics:
+			% for picid in sorted(pics, key=lambda key: -pics[key]["time_added"]):
+			% 	pic = pics[picid]
+			
+			<!-- lightbox modal -->
+			<div id="lightboxModal{{picid}}" class="modal fade" role="dialog" tabindex="-1" aria-hidden="true" width=800px height=600px>
+				<div class="modal-dialog" aria-hidden="true">
+				<div class="modal-content">
+        <div class="modal-body">
+					<img src="/pic/halloffame/orig/{{pic['picid']}}" alt="">
+					</div></div>
+				</div>
+			</div>
+			
             <div class="col-lg-3 col-md-4 col-xs-6 thumb">
-                <a class="thumbnail" href="#">
+                <a class="thumbnail" href="#lightboxModal{{picid}}" data-toggle="modal" data-backdrop="true">
                     <img class="img-responsive" src="/pic/halloffame/thumb/{{pic['picid']}}" alt="">
                 </a>
             </div>

@@ -33,6 +33,10 @@ def set_interval(interval):
         return wrapper
     return decorator
 
+def get_str_from_uuid(uuid):
+	" returns uuid with dashes as string "
+	return uuid.urn.split(":")[-1]
+	
 def get_user(callback):
 	" decorator that passes in logged in user to route handler "
 	" requires: db and email parameters in route handler "
@@ -56,8 +60,12 @@ def get_user(callback):
 		return callback(*args, **kwargs)
 	return wrapper
 
-def get_pics(db, last_time=0):
-	pics = db.execute("select * from PetBay.Pic")
+def get_pics(db, table, picids=None, last_time=0):
+	where = ""
+	if picids is not None:
+		where = "where picid in (%s)" % ','.join(map(get_str_from_uuid, picids))
+
+	pics = db.execute("select picid, user_email, time_added, ttl(data) from PetBay.%s %s" % (table, where))
 	picids = []
 	pic_dict = {}
 	for pic in pics:
@@ -86,20 +94,19 @@ def get_new(db):
 	if last_time is None or not last_time.isdigit():
 		abort(500)
 	
-	return {"pics": get_pics(db, int(last_time))}
+	return {"pics": get_pics(db, "Pic", int(last_time))}
 
 @route("/")
 @view("index")
 @get_user
 def get_index(db, email):
-	return {"pics": get_pics(db), "email": email}
+	return {"pics": get_pics(db, "Pic"), "email": email}
 
 @route("/halloffame")
 @view("halloffame")
 @get_user
 def get_halloffame(db, email):
-	rows = db.execute("select * from PetBay.WallOfFame")
-	return {"pics": rows, "email": email}
+	return {"pics": get_pics(db, "WallOfFame"), "email": email}
 
 @route("/profile")
 @route("/profile/<user>")
@@ -117,7 +124,9 @@ def get_profile(db, email, user=None):
 		return abort(404)
 	
 	row, = rows
-	return {"email": email, "user": user, "nickname": row["nickname"], "description": row["description"], "walloffame_picids": row["walloffame_picids"]}
+	pics = get_pics(db, "WallOfFame", picids=row["walloffame_picids"])
+	
+	return {"email": email, "user": user, "nickname": row["nickname"], "description": row["description"], "walloffame_picids": row["walloffame_picids"], "pics": pics}
 
 @route("/ajax/login", method="POST")
 def perform_login(db):
@@ -211,18 +220,35 @@ def perform_upload(db, email):
 		im = Image.open(upload.file)
 	except:
 		return {"status": "ERROR", "message": "Bad file"}
-		
+
 	orig_data = StringIO.StringIO()
 	im.save(orig_data, format="JPEG")
-	im.thumbnail((400, 300), Image.ANTIALIAS)
+		
+	# thumb-nify..
+	# calculate so image covers thumbnail area (target)
+	target_w, target_h = (243, 200)
+	aspect_ratio = float(im.width) / float(im.height)
+	if im.width > im.height:
+		thumb_h = min(im.height, target_h)
+		thumb_w = aspect_ratio * thumb_h
+	else:
+		thumb_w = min(im.width, target_w)
+		thumb_h = thumb_w / aspect_ratio
+	
+	# resize
+	im.thumbnail((thumb_w, thumb_h), Image.ANTIALIAS)
+	# crop
+	thumb = Image.new("RGB", (target_w, target_h))
+	thumb.paste(im, ((target_w - im.width) / 2, (target_h - im.height) / 2))
+	
 	thumb_data = StringIO.StringIO()
-	im.save(thumb_data, format="JPEG")
+	thumb.save(thumb_data, format="JPEG")
 	
 	picid = cassandra.util.uuid_from_time(time.time())
 	prepared = db.prepare("insert into PetBay.Pic(picid, user_email, data, data_thumb, mime, time_added) values (?, ?, ?, ?, ?, ?) if not exists using ttl 240")
 	db.execute(prepared, (picid, email, orig_data.getvalue(), thumb_data.getvalue(), "image/jpeg", int(time.time())))
 	
-	prepared = db.prepare("update PetBay.User set picids = picids + {" + picid.urn.split(":")[-1] + "} where email=?")
+	prepared = db.prepare("update PetBay.User set picids = picids + {" + get_str_from_uuid(picid) + "} where email=?")
 	db.execute(prepared, (email,))
 	
 	return {"status": "OK"}

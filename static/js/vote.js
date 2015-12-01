@@ -19,8 +19,9 @@ function vote(picid, voteType) {
 
 function progressHandlingFunction(e){
     if(e.lengthComputable){
-		$("#proBar2").width(e.loaded);
-		$("#proBar2").html(e.loaded);
+		var progress = ((e.loaded / e.total) * 100.0).toFixed(2) + "%";
+		$("#proBar2").width(progress);
+		$("#proBar2").html(progress);
     }
 }
 
@@ -61,9 +62,12 @@ function upload3(event){
 		$.get("/", function(data, status){
         document.body.parentNode.innerHTML = data;
 		$('#upModal').modal();
-		document.getElementById("entry_fieldsg").innerHTML = "Upload Successful!";
+		var orig_html = $("#entry_fieldsg").html();
+		$("#entry_fieldsg").html("Upload Successful!");
 		setTimeout(function (){
-		window.location.reload();
+			//window.location.reload();
+			//$("#upModal").modal("hide");
+			$("#entry_fieldsg").html(orig_html);
 		}, 1000);
     });
 	});
@@ -77,7 +81,7 @@ function showUp(event) {
 	event.stopPropagation();
 }
 
-var last_update = new Date() / 1000;
+/*var last_update = new Date() / 1000;
 
 setInterval(function() {
 	$.get("/ajax/getnew", {last_time: Math.round(last_update)-6}, function(data) {
@@ -87,6 +91,6 @@ setInterval(function() {
 		event.preventDefault();
 		event.stopPropagation();
 	});
-}, 3000);
+}, 3000);*/
 
 

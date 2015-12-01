@@ -11,6 +11,7 @@
 	<script src="/static/js/sjcl.js"></script>
 	<script src="/static/js/login.js"></script>
 	<script src="/static/js/vote.js"></script>
+	<script src="/static/js/timer.js"></script>
 
 
     <title>PetBay</title>
@@ -66,7 +67,7 @@
                 </ul>
 				<!--http://bootsnipp.com/snippets/featured/horizontal-login-form-in-navbar-with-prepend-->
 				% if email is None:
-				<form id="signin" class="navbar-form navbar-right" role="form">
+				<form id="signin" class="navbar-form navbar-right" role="form" method="POST">
 					<div class="input-group">
 						<span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
 						<input id="email" type="email" class="form-control" name="email" value="" placeholder="Email Address">                                        
@@ -103,7 +104,7 @@
 					</legend>
 				</div>
 				<div id="entry_fields" class="modal-body">
-					<form id="regForm" class="form" role="form">
+					<form id="regForm" class="form" role="form" method="POST">
 						<input id="newEmail" class="form-control" name="email" placeholder="Your Email" type="email" />
 						<input id="reNewEmail" class="form-control" name="reenteremail" placeholder="Re-enter Email" type="email" />
 						<input id="newPass" class="form-control" name="password" placeholder="New Password" type="password" />
@@ -125,19 +126,19 @@
 					</legend>
 				</div>
 				<div id="entry_fieldsg" class="modal-body">					
-						<form id="uploader" enctype="multipart/form-data">
-						<label class="control-label">Select File:</label>
-						<br>
-						<div style="position:relative;">
-						<a class='btn btn-primary' href='javascript:;'>
-						Choose File...
-						<input name="upload" id="input-1" type="file" class="btn-file" style='position:absolute;z-index:2;top:0;left:0;filter: alpha(opacity=0);-ms-filter:"progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";opacity:0;background-color:transparent;color:transparent;' name="file_source" size="40"  onchange='$("#upload-file-info").html($(this).val());'>
-						</a>
-						&nbsp;
-						<span class='label label-info' id="upload-file-info"></span>
-						</div>
-						<br>
-						<button type="submit" onclick="upload3(event)" class="btn btn-primary">Upload</button>					
+						<form id="uploader" enctype="multipart/form-data" method="POST">
+							<label class="control-label">Select File:</label>
+							<br>
+							<div style="position:relative;">
+							<a class='btn btn-primary' href='javascript:;'>
+							Choose File...
+							<input name="upload" id="input-1" type="file" class="btn-file" style='position:absolute;z-index:2;top:0;left:0;filter: alpha(opacity=0);-ms-filter:"progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";opacity:0;background-color:transparent;color:transparent;' name="file_source" size="40"  onchange='$("#upload-file-info").html($(this).val());'>
+							</a>
+							&nbsp;
+							<span class='label label-info' id="upload-file-info"></span>
+							</div>
+							<br>
+							<button type="submit" onclick="upload3(event)" class="btn btn-primary">Upload</button>					
 						</form>
 						<br>
 						<div id="proBar"  hidden class="progress">
@@ -172,7 +173,9 @@
 					<button type="button" onclick="vote('{{picid}}','down')" class="btn btn-default btn-xs">
 						<span class="glyphicon glyphicon-arrow-down" aria-hidden="true"></span>
 					</button>
-                </div>		
+					<br/>
+					<span class="timer" data-time_left={{pic["ttl(data)"]}}>00:00:00</span> <span style="font-size: 12px">until <strong>THE END</strong></span>
+                </div>
             </div>
 			% end
         </div>

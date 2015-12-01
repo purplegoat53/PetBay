@@ -11,6 +11,7 @@
 	<script src="/static/js/jquery.js"></script>
 	<script src="/static/js/sjcl.js"></script>
 	<script src="/static/js/login.js"></script>
+	
 
     <title>PetBay</title>
 
@@ -19,12 +20,6 @@
 
     <!-- Custom CSS -->
     <link href="/static/css/thumbnail-gallery.css" rel="stylesheet">
-	
-	<!-- Magnific Popup core CSS file -->
-	<link rel="stylesheet" href="magnific-popup/magnific-popup.css">
-	
-	<!-- Magnific Popup core JS file -->
-	<script src="magnific-popup/jquery.magnific-popup.js"></script>
 
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -64,11 +59,13 @@
                         <a href="/profile">Profile</a>
                     </li>
                 </ul>
-				<form id="signout" class="navbar-form navbar-right" role="form">
+				% if email is not None:
+				<form id="signout" class="navbar-form navbar-right" role="form" style="color:azure">
 					Logged in as:&nbsp;{{email}}
 					<button type="submit" onclick="showUp(event)" class="btn btn-primary">Upload</button>
 					<button type="submit" onclick="logout(event)" class="btn btn-primary">Logout</button>
 				</form>
+				% end
             </div>
             <!-- /.navbar-collapse -->
         </div>
@@ -82,7 +79,7 @@
         <div class="row">
             <div class="col-lg-12">
                 <h1 class="page-header">
-                    {{email if nickname is None else nickname}} <small>Hall of fame points: {{len(walloffame_picids or [])}}</small>
+                    {{user if nickname is None else nickname}} <small>Hall of fame points: {{len(walloffame_picids or [])}}</small>
                 </h1>	
             </div>	
         </div>
@@ -119,7 +116,7 @@
         <!-- Portfolio Item Row -->
         <div class="row">
             <div class="col-sm-3">
-                <img class="img-responsive" src="/pic/profile/{{email}}" alt="">
+                <img class="img-responsive" src="/pic/profile/{{user}}" alt="">
 				<button type="button" class="btn btn-primary" data-toggle="modal" href="#profModal" data-backdrop="true" style="margin-top:5px">Edit profile</button>
             </div>
 
@@ -130,37 +127,31 @@
 
         </div>
         <!-- /.row -->
-
         <!-- Related Projects Row -->
         <div class="row">
 
             <div class="col-lg-12">
                 <h3 class="page-header">Last 4 to make it to hall of fame</h3>
             </div>
-
-            <div class="col-sm-3 col-xs-6">
-                <a href="#">
-                    <img class="img-responsive portfolio-item" src="/static/css/aww/cat1.jpg" alt="">
-                </a>
-            </div>
 			
-            <div class="col-sm-3 col-xs-6">
-                <a href="#">
-                    <img class="img-responsive portfolio-item" onclick="test-popup-link" src="http://placehold.it/500x300" alt="">
+			% for picid in sorted(pics, key=lambda key: -pics[key]["time_added"])[:4]: # TODO: move to controller
+			% 	pic = pics[picid]
+			
+			<!-- lightbox modal -->
+			<div id="lightboxModal{{picid}}" class="modal fade" role="dialog" tabindex="-1" aria-labelledby="myModalLabel" aria-hidden="true" style="max-height=100%; max-width=100%">
+				<div class="modal-dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+					<div class="modal-content">
+						<img class="img-responsive portfolio-item" src="/pic/halloffame/orig/{{picid}}" alt="">
+					</div>
+				</div>
+			</div>
+			
+			<div class="col-sm-3 col-xs-6">
+				<a href="#lightboxModal{{picid}}" data-toggle="modal" data-backdrop="true">
+                     <img class="img-responsive portfolio-item" src="/pic/halloffame/thumb/{{picid}}" alt="">
                 </a>
             </div>
-
-            <div class="col-sm-3 col-xs-6">
-                <a href="#">
-                    <img class="img-responsive portfolio-item" onclick="test-popup-link" src="http://placehold.it/500x300" alt="">
-                </a>
-            </div>
-
-            <div class="col-sm-3 col-xs-6">
-                <a href="#">
-                    <img class="img-responsive portfolio-item" src="http://placehold.it/500x300" alt="">
-                </a>
-            </div>
+			% end
 
         </div>
         <!-- /.row -->
