@@ -7,9 +7,9 @@ import cassandra, time, random, hashlib, mimetypes, uuid, StringIO, functools, o
 def setup_db(cassandra):
 	session = cassandra.getsession()
 	session.execute("create keyspace if not exists PetBay with replication = {'class':'SimpleStrategy', 'replication_factor': 1};")
-	session.execute("create table if not exists PetBay.User(email text primary key, password text, picids set<uuid>, walloffame_picids set<uuid>, profile_data blob, profile_mime text, description text)")
+	session.execute("create table if not exists PetBay.User(email text primary key, password text, picids set<uuid>, walloffame_picids set<uuid>, profile_data blob, profile_mime text, description text, nickname text)")
 	session.execute("create table if not exists PetBay.Pic(picid uuid primary key, user_email text, data blob, data_thumb blob, mime text, time_added bigint)")
-	session.execute("create table if not exists PetBay.WallOfFame(picid uuid primary key, user_email text, data blob, mime text, time_added bigint)")
+	session.execute("create table if not exists PetBay.WallOfFame(picid uuid primary key, user_email text, data blob, data_thumb blob, mime text, time_added bigint)")
 	session.execute("create table if not exists PetBay.Votes(picid uuid primary key, votes_up counter, votes_down counter)")
 	session.execute("create table if not exists PetBay.Voters(picid uuid, email text, up_vote boolean, primary key(picid, email))")
 	
@@ -56,36 +56,51 @@ def get_user(callback):
 		return callback(*args, **kwargs)
 	return wrapper
 
-@route("/static/<filename:path>")
-def get_static(filename):
-	response.content_type = mimetypes.guess_type(filename)
-	return static_file(filename, root="./static")
-
-@route("/")
-@view("index")
-@get_user
-def get_index(db, email):
+def get_pics(db, last_time=0):
 	pics = db.execute("select * from PetBay.Pic")
 	picids = []
 	pic_dict = {}
 	for pic in pics:
-		picid = pic["picid"]
-		pic["votes"] = 0
-		pic_dict[picid] = pic
-		picids.append(picid)
+		if pic["time_added"] > last_time:
+			picid = pic["picid"]
+			pic["votes"] = 0
+			pic_dict[picid] = pic
+			picids.append(picid)
 	
 	prepared = db.prepare("select * from PetBay.Votes where picid in (" + (','.join(["?"] * len(picids))) + ")")
 	votes = db.execute(prepared, picids)
 	for vote in votes:
 		pic_dict[vote["picid"]]["votes"] = (vote["votes_up"] or 0) - (vote["votes_down"] or 0)
 	
-	return {"pics": pic_dict, "email": email}
+	return pic_dict
+	
+@route("/static/<filename:path>")
+def get_static(filename):
+	response.content_type = mimetypes.guess_type(filename)
+	return static_file(filename, root="./static")
+	
+@route("/ajax/getnew")
+@view("new")
+def get_new(db):
+	last_time = request.query.get("last_time")
+	if last_time is None or not last_time.isdigit():
+		abort(500)
+	
+	return {"pics": get_pics(db, int(last_time))}
+
+@route("/")
+@view("index")
+@get_user
+def get_index(db, email):
+	return {"pics": get_pics(db), "email": email}
 
 @route("/halloffame")
 @view("halloffame")
-def get_halloffame():
-	pass
-	
+@get_user
+def get_halloffame(db, email):
+	rows = db.execute("select * from PetBay.WallOfFame")
+	return {"pics": rows, "email": email}
+
 @route("/profile")
 @route("/profile/<user>")
 @view("profile")
@@ -95,14 +110,14 @@ def get_profile(db, email, user=None):
 		if email is None:
 			return redirect("/")
 		return redirect("/profile/%s" % email)
-
+	
 	prepared = db.prepare("select * from PetBay.User where email=?")
-	rows = db.execute(prepared, (email,))
+	rows = db.execute(prepared, (user,))
 	if len(rows) <= 0:
 		return abort(404)
 	
 	row, = rows
-	return {"email": user, "description": row["description"], "walloffame_picids": row["walloffame_picids"]}
+	return {"email": email, "user": user, "nickname": row["nickname"], "description": row["description"], "walloffame_picids": row["walloffame_picids"]}
 
 @route("/ajax/login", method="POST")
 def perform_login(db):
@@ -204,12 +219,55 @@ def perform_upload(db, email):
 	im.save(thumb_data, format="JPEG")
 	
 	picid = cassandra.util.uuid_from_time(time.time())
-	prepared = db.prepare("insert into PetBay.Pic(picid, user_email, data, data_thumb, mime, time_added) values (?, ?, ?, ?, ?, ?) if not exists using ttl 30")
+	prepared = db.prepare("insert into PetBay.Pic(picid, user_email, data, data_thumb, mime, time_added) values (?, ?, ?, ?, ?, ?) if not exists using ttl 240")
 	db.execute(prepared, (picid, email, orig_data.getvalue(), thumb_data.getvalue(), "image/jpeg", int(time.time())))
-	#prepared = db.prepare("update PetBay.Votes set votes_up=0, votes_down=0 where picid=?")
-	#db.execute(prepared, (picid))
+	
+	prepared = db.prepare("update PetBay.User set picids = picids + {" + picid.urn.split(":")[-1] + "} where email=?")
+	db.execute(prepared, (email,))
+	
 	return {"status": "OK"}
 
+@route("/ajax/update_profile", method="POST")
+@get_user
+def perform_update_profile(db, email):
+	if email is None:
+		abort(401)
+	
+	#prepared = db.prepare("select * from PetBay.User where email=?")
+	#row, = db.execute(prepared, (email,))
+	
+	nickname = request.forms.get("nickname")
+	if nickname is not None:
+		prepared = db.prepare("update PetBay.User set nickname=? where email=?")
+		db.execute(prepared, (nickname, email))
+	
+	description = request.forms.get("description")
+	if description is not None:
+		prepared = db.prepare("update PetBay.User set description=? where email=?")
+		db.execute(prepared, (description, email))
+
+	profile = request.files.get("upload")
+	if profile is not None:
+		name, ext = os.path.splitext(profile.filename)
+		if ext.lower() not in (".png", ".jpg", ".jpeg"):
+			return {"status": "ERROR", "message": "Invalid file format"}
+
+		try:
+			im = Image.open(profile.file)
+		except:
+			return {"status": "ERROR", "message": "Bad file"}
+		
+		thumb_mime = "image/jpeg"
+		thumb_data = StringIO.StringIO()
+		im.thumbnail((300, 300), Image.ANTIALIAS)
+		im.save(thumb_data, format="JPEG")
+		thumb_data = thumb_data.getvalue()
+		
+		prepared = db.prepare("update PetBay.User set profile_data=?, profile_mime='image/jpeg' where email=?")
+		db.execute(prepared, (thumb_data, email))
+	
+	return {"status": "OK"}
+	
 @route("/pic/orig/<picid>")
 def get_pic_original(picid, db):
 	prepared = db.prepare("select * from PetBay.Pic where picid=?")
@@ -250,6 +308,30 @@ def get_pic_profile(email, db):
 	response.content_type = "image/jpeg"
 	return static_file("css/profile_empty.jpg", root="./static")
 
+@route("/pic/halloffame/thumb/<picid>")
+def get_pic_halloffame_thumb(picid, db):
+	prepared = db.prepare("select * from PetBay.WallOfFame where picid=?")
+	rows = db.execute(prepared, (uuid.UUID(picid),))
+
+	if len(rows) <= 0:
+		abort(404)
+
+	row, = rows
+	response.content_type = row["mime"]
+	return row["data_thumb"]
+	
+@route("/pic/halloffame/orig/<picid>")
+def get_pic_original(picid, db):
+	prepared = db.prepare("select * from PetBay.WallOfFame where picid=?")
+	rows = db.execute(prepared, (uuid.UUID(picid),))
+
+	if len(rows) <= 0:
+		abort(404)
+
+	row, = rows
+	response.content_type = row["mime"]
+	return row["data"]
+	
 @route("/ajax/vote/<vote>", method="POST")
 @get_user
 def perform_vote(vote, db, email):
@@ -303,7 +385,7 @@ def perform_vote(vote, db, email):
 			return {"status": "ERROR", "message": "Already voted"}
 	else:
 		return {"status": "ERROR", "message": "Multiple votes detected"}
-		
+	
 	return {"status": "OK"}
 
 @route("/ajax/welcome")
@@ -312,15 +394,40 @@ def perform_vote(vote, db, email):
 def get_welcome(db, email):
 	return {"email": email}
 
-@set_interval(120)
+@set_interval(60)
 def move_to_halloffame(db):
 	""" cron job, moves about to expire sucessful new
 		hall of fame entries to the hall of fame """
 		
 	# grab all the pics and their ttl
-	rows = db.execute("select picid, ttl(data) from PetBay.Pic")
-	rows = filter(lambda row: row["ttl(data)"] < 240, rows)
+	rows = db.execute("select picid, user_email, ttl(data) from PetBay.Pic")
 	
+	# filter out those about to be destroyed
+	rows = filter(lambda row: row["ttl(data)"] < 120, rows)
+	
+	for row in rows:
+		prepared = db.prepare("select * from PetBay.Votes where picid=?")
+		votes = db.execute(prepared, (row["picid"],))
+		if len(votes) <= 0:
+			# no votes
+			continue
+		vote, = votes
+		score = (vote["votes_up"] or 0) - (vote["votes_down"] or 0)
+		
+		if score < 1:
+			# not high enough
+			continue
+	
+		prepared = db.prepare("update PetBay.User set walloffame_picids = walloffame_picids + {" + row["picid"].urn.split(":")[-1] + "} where email=?")
+		db.execute(prepared, (row["user_email"],))
+		
+		# same picid used, so can be executed multiple times without duplication
+		prepared = db.prepare("select * from PetBay.Pic where picid=?")
+		pic_row, = db.execute(prepared, (row["picid"],))
+		
+		prepared = db.prepare("insert into PetBay.WallOfFame(picid, user_email, data, data_thumb, mime, time_added) values (?, ?, ?, ?, ?, ?)")
+		db.execute(prepared, (pic_row["picid"], pic_row["user_email"], pic_row["data"], pic_row["data_thumb"], pic_row["mime"], pic_row["time_added"]))
+
 if __name__ == "__main__":
 	from cassandraplugin import CassandraPlugin
 	cassandra_plugin = CassandraPlugin()

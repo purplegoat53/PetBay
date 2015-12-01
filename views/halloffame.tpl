@@ -7,7 +7,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="">
     <meta name="author" content="">
-
+	<script src="/static/js/jquery.js"></script>
+	<script src="/static/js/sjcl.js"></script>
+	<script src="/static/js/login.js"></script>
+	<script src="/static/js/vote.js"></script>
+	
+	
     <title>PetBay</title>
 
     <!-- Bootstrap Core CSS -->
@@ -53,7 +58,35 @@
                     <li>
                         <a href="/profile">Profile</a>
                     </li>
+					% if email is None:
+					<li>
+						<a data-toggle="modal" href="#regModal" data-backdrop="true" >Register</a>
+					</li>
+					% end
                 </ul>
+				<!--http://bootsnipp.com/snippets/featured/horizontal-login-form-in-navbar-with-prepend-->
+				% if email is None:
+				<form id="signin" class="navbar-form navbar-right" role="form">
+					<div class="input-group">
+						<span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
+						<input id="email" type="email" class="form-control" name="email" value="" placeholder="Email Address">                                        
+					</div>
+
+					<div class="input-group">
+						<span class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></span>
+						<input id="password" type="password" class="form-control" name="password" value="" placeholder="Password">                                        
+					</div>
+
+					<button type="submit" onclick="login1(event)" class="btn btn-primary">Login</button>
+				</form>
+				% else:
+				<form id="signout" class="navbar-form navbar-right" role="form" style="color:azure">
+					Logged in as:&nbsp;{{email}}
+					<button type="submit" onclick="showUp(event)" class="btn btn-primary">Upload</button>
+					<button type="submit" onclick="logout(event)" class="btn btn-primary">Logout</button>
+				</form>
+				% end				
+				
             </div>
             <!-- /.navbar-collapse -->
         </div>
@@ -66,69 +99,16 @@
         <div class="row">
 
             <div class="col-lg-12">
-                <h1 class="page-header">HALL OF FAME</h1>
+                <h1 class="page-header">The Cuddliest of All Times</h1>
             </div>
 
+			% for pic in pics:
             <div class="col-lg-3 col-md-4 col-xs-6 thumb">
                 <a class="thumbnail" href="#">
-                    <img class="img-responsive" src="http://placehold.it/400x300" alt="">
+                    <img class="img-responsive" src="/pic/halloffame/thumb/{{pic['picid']}}" alt="">
                 </a>
             </div>
-            <div class="col-lg-3 col-md-4 col-xs-6 thumb">
-                <a class="thumbnail" href="#">
-                    <img class="img-responsive" src="http://placehold.it/400x300" alt="">
-                </a>
-            </div>
-            <div class="col-lg-3 col-md-4 col-xs-6 thumb">
-                <a class="thumbnail" href="#">
-                    <img class="img-responsive" src="http://placehold.it/400x300" alt="">
-                </a>
-            </div>
-            <div class="col-lg-3 col-md-4 col-xs-6 thumb">
-                <a class="thumbnail" href="#">
-                    <img class="img-responsive" src="http://placehold.it/400x300" alt="">
-                </a>
-            </div>
-            <div class="col-lg-3 col-md-4 col-xs-6 thumb">
-                <a class="thumbnail" href="#">
-                    <img class="img-responsive" src="http://placehold.it/400x300" alt="">
-                </a>
-            </div>
-            <div class="col-lg-3 col-md-4 col-xs-6 thumb">
-                <a class="thumbnail" href="#">
-                    <img class="img-responsive" src="http://placehold.it/400x300" alt="">
-                </a>
-            </div>
-            <div class="col-lg-3 col-md-4 col-xs-6 thumb">
-                <a class="thumbnail" href="#">
-                    <img class="img-responsive" src="http://placehold.it/400x300" alt="">
-                </a>
-            </div>
-            <div class="col-lg-3 col-md-4 col-xs-6 thumb">
-                <a class="thumbnail" href="#">
-                    <img class="img-responsive" src="http://placehold.it/400x300" alt="">
-                </a>
-            </div>
-            <div class="col-lg-3 col-md-4 col-xs-6 thumb">
-                <a class="thumbnail" href="#">
-                    <img class="img-responsive" src="http://placehold.it/400x300" alt="">
-                </a>
-            </div>
-            <div class="col-lg-3 col-md-4 col-xs-6 thumb">
-                <a class="thumbnail" href="#">
-                    <img class="img-responsive" src="http://placehold.it/400x300" alt="">
-                </a>
-            </div>
-            <div class="col-lg-3 col-md-4 col-xs-6 thumb">
-                <a class="thumbnail" href="#">
-                    <img class="img-responsive" src="http://placehold.it/400x300" alt="">
-                </a>
-            </div>
-            <div class="col-lg-3 col-md-4 col-xs-6 thumb">
-                <a class="thumbnail" href="#">
-                    <img class="img-responsive" src="http://placehold.it/400x300" alt="">
-                </a>
-            </div>
+			% end
         </div>
 		
 		<ul class="pagination pagination-sm">

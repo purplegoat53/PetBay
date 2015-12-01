@@ -7,6 +7,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="">
     <meta name="author" content="">
+	<script src="/static/js/updateprof.js"></script>
+	<script src="/static/js/jquery.js"></script>
+	<script src="/static/js/sjcl.js"></script>
 	<script src="/static/js/login.js"></script>
 
     <title>PetBay</title>
@@ -16,6 +19,12 @@
 
     <!-- Custom CSS -->
     <link href="/static/css/thumbnail-gallery.css" rel="stylesheet">
+	
+	<!-- Magnific Popup core CSS file -->
+	<link rel="stylesheet" href="magnific-popup/magnific-popup.css">
+	
+	<!-- Magnific Popup core JS file -->
+	<script src="magnific-popup/jquery.magnific-popup.js"></script>
 
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -55,6 +64,11 @@
                         <a href="/profile">Profile</a>
                     </li>
                 </ul>
+				<form id="signout" class="navbar-form navbar-right" role="form">
+					Logged in as:&nbsp;{{email}}
+					<button type="submit" onclick="showUp(event)" class="btn btn-primary">Upload</button>
+					<button type="submit" onclick="logout(event)" class="btn btn-primary">Logout</button>
+				</form>
             </div>
             <!-- /.navbar-collapse -->
         </div>
@@ -68,28 +82,50 @@
         <div class="row">
             <div class="col-lg-12">
                 <h1 class="page-header">
-                    {{email}} <small>[no of pictures in hall of fame?]</small>
-                </h1>
-            </div>
+                    {{email if nickname is None else nickname}} <small>Hall of fame points: {{len(walloffame_picids or [])}}</small>
+                </h1>	
+            </div>	
         </div>
         <!-- /.row -->
-
+	<div id="profModal" class="modal fade" role="dialog" tabindex="-1" aria-labelledby="myModalLabel" aria-hidden="true">
+		<div class="modal-dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+			<div class="modal-content">
+				<div class="modal-header">
+					<legend> 
+						<img style="max-width:75px; margin-top: -7px;"src="/static/css/aww/logo.png">&nbsp;&nbsp;&nbsp;Edit Profile
+					</legend>
+				</div>
+				<div id="updateDiv" class="modal-body">
+					<form id="uploader" enctype="multipart/form-data">
+						<input id="nickname" class="form-control" name="nickname" placeholder="User name" type="user" /><br>
+						<input id="description" class="form-control" name="description" placeholder="Description" type="description" /><br>
+						<div style="position:relative;">
+						<a class='btn btn-primary' href='javascript:;'>
+						Choose File...
+						<input name="upload" id="input-1" type="file" class="btn-file" style='position:absolute;z-index:2;top:0;left:0;filter: alpha(opacity=0);-ms-filter:"progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";opacity:0;background-color:transparent;color:transparent;' name="file_source" size="40"  onchange='$("#upload-file-info").html($(this).val());'>
+						</a>
+						&nbsp;
+						<span class='label label-info' id="upload-file-info"></span>
+						</div><br>
+						<div id="proBar"  hidden class="progress">
+							<div id="proBar2" class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+						</div>
+						<button class="btn btn-lg btn-primary btn-block" onclick="updateProf(event)" type="submit">Update</button>	
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
         <!-- Portfolio Item Row -->
         <div class="row">
             <div class="col-sm-3">
                 <img class="img-responsive" src="/pic/profile/{{email}}" alt="">
+				<button type="button" class="btn btn-primary" data-toggle="modal" href="#profModal" data-backdrop="true" style="margin-top:5px">Edit profile</button>
             </div>
 
             <div class="col-md-4">
-                <p>Description?</p>
-				<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam viverra euismod odio, gravida pellentesque urna varius vitae. Sed dui lorem, adipiscing in adipiscing et, interdum nec metus. Mauris ultricies, justo eu convallis placerat, felis enim.</p>
-                <h3>Project Details (prob drop the whole thing)</h3>
-                <ul>
-                    <li>Lorem Ipsum</li>
-                    <li>Dolor Sit Amet</li>
-                    <li>Consectetur</li>
-                    <li>Adipiscing Elit</li>
-                </ul>
+                <h3>Description</h3>
+				<p>{{description}}</p>
             </div>
 
         </div>
@@ -107,16 +143,16 @@
                     <img class="img-responsive portfolio-item" src="/static/css/aww/cat1.jpg" alt="">
                 </a>
             </div>
-
+			
             <div class="col-sm-3 col-xs-6">
                 <a href="#">
-                    <img class="img-responsive portfolio-item" src="http://placehold.it/500x300" alt="">
+                    <img class="img-responsive portfolio-item" onclick="test-popup-link" src="http://placehold.it/500x300" alt="">
                 </a>
             </div>
 
             <div class="col-sm-3 col-xs-6">
                 <a href="#">
-                    <img class="img-responsive portfolio-item" src="http://placehold.it/500x300" alt="">
+                    <img class="img-responsive portfolio-item" onclick="test-popup-link" src="http://placehold.it/500x300" alt="">
                 </a>
             </div>
 

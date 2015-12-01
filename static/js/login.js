@@ -22,13 +22,14 @@ function login1(event) {
 		}
 		else
 		{
-			document.getElementById("signin").innerHTML = ""
+			document.getElementById("signin").innerHTML = "<button type='submit' onclick='showUp(event)' class='btn btn-primary'>Upload</button> <button type='submit' onclick='logout(event)' class='btn btn-primary'>Logout</button>";
 			 $('#experiment').load('/ajax/welcome');
 			 //$('#experiment').modal('show');
 			 $('#experiment').modal();
 			 //$('#exModal').modal('show');
 			 //$('#experiment').modal('toggle');
 		}
+		//location.reload(); 
     });
 }
 
@@ -65,15 +66,13 @@ function register(event) {
 }
 
 function logout(event) {
+	event.preventDefault();
+	event.stopPropagation();
 	$.post("/ajax/logout",
     {
-
     },
     function(data, status){
-        alert("Data: " + data.status + "\nStatus: " + status);	
+        alert("Data: " + data.status + "\nStatus: " + status);
+		location.reload(); 
     });
-	}
 }
-
-
-

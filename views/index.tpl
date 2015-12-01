@@ -7,7 +7,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="">
     <meta name="author" content="">
-		<script src="/static/js/sjcl.js"></script>
+	<script src="/static/js/jquery.js"></script>
+	<script src="/static/js/sjcl.js"></script>
 	<script src="/static/js/login.js"></script>
 	<script src="/static/js/vote.js"></script>
 
@@ -57,9 +58,11 @@
                     <li>
                         <a href="/profile">Profile</a>
                     </li>
+					% if email is None:
 					<li>
 						<a data-toggle="modal" href="#regModal" data-backdrop="true" >Register</a>
 					</li>
+					% end
                 </ul>
 				<!--http://bootsnipp.com/snippets/featured/horizontal-login-form-in-navbar-with-prepend-->
 				% if email is None:
@@ -77,7 +80,11 @@
 					<button type="submit" onclick="login1(event)" class="btn btn-primary">Login</button>
 				</form>
 				% else:
-				{{email}}
+				<form id="signout" class="navbar-form navbar-right" role="form" style="color:azure">
+					Logged in as:&nbsp;{{email}}
+					<button type="submit" onclick="showUp(event)" class="btn btn-primary">Upload</button>
+					<button type="submit" onclick="logout(event)" class="btn btn-primary">Logout</button>
+				</form>
 				% end
 				
             </div>
@@ -108,42 +115,50 @@
 			</div>
 		</div>
 	</div>
-
-    <!-- Page Content -->
+	
+	<div id="upModal" class="modal fade" role="dialog" tabindex="-1" aria-labelledby="myModalLabel" aria-hidden="true">
+				<div class="modal-dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+			<div class="modal-content">
+				<div class="modal-header">
+					<legend> 
+						<img style="max-width:75px; margin-top: -7px;"src="/static/css/aww/logo.png">&nbsp;&nbsp;&nbsp;Upload a File
+					</legend>
+				</div>
+				<div id="entry_fieldsg" class="modal-body">					
+						<form id="uploader" enctype="multipart/form-data">
+						<label class="control-label">Select File:</label>
+						<br>
+						<div style="position:relative;">
+						<a class='btn btn-primary' href='javascript:;'>
+						Choose File...
+						<input name="upload" id="input-1" type="file" class="btn-file" style='position:absolute;z-index:2;top:0;left:0;filter: alpha(opacity=0);-ms-filter:"progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";opacity:0;background-color:transparent;color:transparent;' name="file_source" size="40"  onchange='$("#upload-file-info").html($(this).val());'>
+						</a>
+						&nbsp;
+						<span class='label label-info' id="upload-file-info"></span>
+						</div>
+						<br>
+						<button type="submit" onclick="upload3(event)" class="btn btn-primary">Upload</button>					
+						</form>
+						<br>
+						<div id="proBar"  hidden class="progress">
+							<div id="proBar2" class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+						</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	</div>
+    <!-- Page Content -->	  
     <div class="container">
 
         <div class="row">
 
             <div class="col-lg-12">
-				<div class="input-group" style="float:right; margin-top:30px">
-					<label class="control-label">Select File</label>
-					<input id="input-1" type="file" class="file">
-				</div>	
-                <h1 class="page-header">Latest cuddles</h1>					
+                <h1 class="page-header">Recently cuddled</h1>					
             </div>
-			<!--<div class="col-xs-12 col-sm-12 col-md-4 well well-sm">
-				<legend><a href="#"><i class="glyphicon glyphicon-globe"></i></a> Sign up!</legend>
-				<form action="#" method="post" class="form" role="form">
-				<div class="row">
-					<div class="col-xs-6 col-md-6">
-						<input class="form-control" name="firstname" placeholder="First Name" type="text"
-							required autofocus />
-					</div>
-					<div class="col-xs-6 col-md-6">
-						<input class="form-control" name="lastname" placeholder="Last Name" type="text" required />
-					</div>
-				</div>
-				<input class="form-control" name="youremail" placeholder="Your Email" type="email" />
-				<input class="form-control" name="reenteremail" placeholder="Re-enter Email" type="email" />
-				<input class="form-control" name="password" placeholder="New Password" type="password" />
-			   
-				<br />
-				<br />
-				<button class="btn btn-lg btn-primary btn-block" type="submit">
-					Sign up</button>
-				</form>
-			</div>-->
-			% for picid in pics:
+			<div id="ajax">
+			</div>
+			% for picid in sorted(pics, key=lambda key: -pics[key]["time_added"]):
 			% 	pic = pics[picid]
             <div class="col-lg-3 col-md-4 col-xs-6 thumb">
 				<div class="thumbnail">
@@ -151,10 +166,10 @@
 						<img class="img-responsive" src="/pic/thumb/{{picid}}" style="height:200px; object-fit:cover" alt="">
 					</a>
 					Cuddles:{{pic["votes"]}}
-					<button type="button" onclick="upvote('{{picid}}')" class="btn btn-default btn-xs">
+					<button type="button" onclick="vote('{{picid}}','up')" class="btn btn-default btn-xs">
 						<span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>
 					</button>
-					<button type="button" class="btn btn-default btn-xs">
+					<button type="button" onclick="vote('{{picid}}','down')" class="btn btn-default btn-xs">
 						<span class="glyphicon glyphicon-arrow-down" aria-hidden="true"></span>
 					</button>
                 </div>		
@@ -176,7 +191,7 @@
         <footer>
             <div class="row">
                 <div class="col-lg-12">
-                    <p>Copyright &copy; Cuddles inc. 2015</p>
+                    <p>Copyright &copy; Cuddles inc. 2016</p>
                 </div>
             </div>
         </footer>
