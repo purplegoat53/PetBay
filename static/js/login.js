@@ -5,7 +5,7 @@ function login1(event) {
 	//var encrypted = sjcl.encrypt("password", password);
 	//var decrypt = sjcl.decrypt("password", encrypted);
 	var statusOfLogin;
-	alert("Email: " + email + "\nPassword: " + password);
+	//alert("Email: " + email + "\nPassword: " + password);
 	
 	event.preventDefault();
 	
@@ -15,10 +15,14 @@ function login1(event) {
         password: password
     },
     function(data, status){
-        alert("Data: " + data.status + "\nStatus: " + status);
+        //alert("Data: " + data.status + "\nStatus: " + status);
 		if(data.status === "ERROR")
 		{
-			document.getElementById("email").value = "Login Incorrect!";
+			document.getElementById("email").placeholder = "Login Incorrect!";
+			document.getElementById("email").value = "";
+			document.getElementById("password").value = "";
+			document.getElementById("email").focus();
+			
 		}
 		else
 		{
@@ -28,6 +32,7 @@ function login1(event) {
 			 $('#experiment').modal();
 			 //$('#exModal').modal('show');
 			 //$('#experiment').modal('toggle');
+			 location.reload();
 		}
 		//location.reload(); 
     });
@@ -59,8 +64,14 @@ function register(event) {
         password: pass
     },
     function(data, status){
-        alert("Data: " + data.status + "\nStatus: " + status);	
-		document.getElementById("entry_fields").innerHTML = "<div><p><font color='Black'>Registration Successful!\nYou can now login with your detials!</font></p></div>"
+        //alert("Data: " + data.status + "\nStatus: " + status);	
+		if(data.status == "OK") {
+			alert("SUCCESS!\nThank you your registration.")
+			$('#regModal').modal('hide');
+		} else {
+			alert("Not success! User already taken.");
+		}
+		//document.getElementById("entry_fields").innerHTML = "<div><p><font color='Black'>Registration Successful!\nYou can now login with your detials!</font></p></div>"
     });
 	}
 }
@@ -72,7 +83,7 @@ function logout(event) {
     {
     },
     function(data, status){
-        alert("Data: " + data.status + "\nStatus: " + status);
+        //alert("Data: " + data.status + "\nStatus: " + status);
 		location.reload(); 
     });
 }

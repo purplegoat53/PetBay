@@ -10,6 +10,7 @@
 		<script src="/static/js/sjcl.js"></script>
 	<script src="/static/js/login.js"></script>
 	<script src="/static/js/vote.js"></script>
+	<script src="/static/js/search.js"></script>
 	
 	
     <title>PetBay</title>
@@ -54,12 +55,15 @@
                     <li>
                         <a href="/halloffame">Hall of Fame</a>
                     </li>
+					% if email is not None:
                     <li>
                         <a href="/profile">Profile</a>
                     </li>
+					% else:
 					<li>
 						<a data-toggle="modal" href="#regModal" data-backdrop="true" >Register</a>
 					</li>
+					% end
                 </ul>
 				<!--http://bootsnipp.com/snippets/featured/horizontal-login-form-in-navbar-with-prepend-->
 				% if email is None:
@@ -81,20 +85,49 @@
 					Logged in as:&nbsp;{{email}}
 					<button type="submit" onclick="logout(event)" class="btn btn-primary">Logout</button>
 				</form>
-				% end				
-				
+				% end	
             </div>
             <!-- /.navbar-collapse -->
+			
         </div>
         <!-- /.container -->
     </nav>
+	<!-- Modal for Register-->
+	<div id="experiment" class="modal fade" role="dialog" tabindex="-1" aria-labelledby="myModalLabel" aria-hidden="true"></div>
+	<!--http://bootsnipp.com/snippets/8VmZ-->
+	<div id="regModal" class="modal fade" role="dialog" tabindex="-1" aria-labelledby="myModalLabel" aria-hidden="true">
+		<div class="modal-dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+			<div class="modal-content">
+				<div class="modal-header">
+					<legend> 
+						<img style="max-width:75px; margin-top: -7px;"src="/static/css/aww/logo.png">&nbsp;&nbsp;&nbsp;Sign up!
+					</legend>
+				</div>
+				<div id="entry_fields" class="modal-body">
+					<form id="regForm" class="form" role="form" method="POST">
+						<input id="newEmail" class="form-control" name="email" placeholder="Your Email" type="email" />
+						<input id="reNewEmail" class="form-control" name="reenteremail" placeholder="Re-enter Email" type="email" />
+						<input id="newPass" class="form-control" name="password" placeholder="New Password" type="password" />
+						<input id="reNewPass" class="form-control" name="reenterpassword" placeholder="Re-enter Password" type="password" />
 
+						<button class="btn btn-lg btn-primary btn-block" onclick="register(event)" type="submit">Sign up</button>	
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
     <!-- Page Content -->
     <div class="container">
-
+	
         <div class="row">
 
             <div class="col-lg-12">
+				<br/><br/>
+				<form id="search" class="navbar-form navbar-right" role="form">
+					<strong>Search for profiles:</strong>
+					<input id="name" class="form-control" name="name" placeholder="Enter Profile Name" type="text" />
+					<button type="submit" onclick="search(event)" class="btn btn-primary">Search</button>
+				</form>
                 <h1 class="page-header">The Cuddliest of All Times</h1>
             </div>
 
@@ -102,23 +135,22 @@
 			% 	pic = pics[picid]
 			
 			<!-- lightbox modal -->
-			<div id="lightboxModal{{picid}}" class="modal fade" role="dialog" tabindex="-1" aria-hidden="true" width=800px height=600px>
+			<div id="lightboxModal{{picid}}" class="modal fade" role="dialog" tabindex="-1" aria-hidden="true">
 				<div class="modal-dialog" aria-hidden="true">
-				<div class="modal-content">
-        <div class="modal-body">
-					<img src="/pic/halloffame/orig/{{pic['picid']}}" alt="">
-					</div></div>
+					<img src="/pic/halloffame/orig/{{pic['picid']}}" class="img-responsive" alt="" style="max-width:800px;max-height:600px;">
 				</div>
 			</div>
-			
             <div class="col-lg-3 col-md-4 col-xs-6 thumb">
+				<span id="labelSpan" class="label label-default rank-label">by: <a href="/profile/{{pic['user_email']}}">{{pic['user_email']}}</a></span>
                 <a class="thumbnail" href="#lightboxModal{{picid}}" data-toggle="modal" data-backdrop="true">
                     <img class="img-responsive" src="/pic/halloffame/thumb/{{pic['picid']}}" alt="">
                 </a>
+				
             </div>
+			
 			% end
         </div>
-		
+		<!--
 		<ul class="pagination pagination-sm">
 		  <li><a href="?page=1">1</a></li>
 		  <li><a href="?page=2">2</a></li>
@@ -126,7 +158,7 @@
 		  <li><a href="?page=4">4</a></li>
 		  <li><a href="?page=5">5</a></li>
 		</ul>
-		
+		-->
         <hr>
 
         <!-- Footer -->

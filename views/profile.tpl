@@ -11,6 +11,7 @@
 	<script src="/static/js/jquery.js"></script>
 	<script src="/static/js/sjcl.js"></script>
 	<script src="/static/js/login.js"></script>
+	<script src="/static/js/search.js"></script>
 	
 
     <title>PetBay</title>
@@ -35,6 +36,7 @@
     <!-- Navigation -->
     <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
         <div class="container">
+		
 			<a class="navbar-brand" rel="home" href="/" title="PetBay">
 				<img style="max-width:75px; margin-top: -7px;"
 				 src="/static/css/aww/logotranssmall.png">
@@ -55,29 +57,79 @@
                     <li>
                         <a href="/halloffame">Hall of Fame</a>
                     </li>
+					% if email is not None:
                     <li>
                         <a href="/profile">Profile</a>
                     </li>
+					% else:
+					<li>
+						<a data-toggle="modal" href="#regModal" data-backdrop="true" >Register</a>
+					</li>
+					% end
                 </ul>
-				% if email is not None:
+				<!--http://bootsnipp.com/snippets/featured/horizontal-login-form-in-navbar-with-prepend-->
+				% if email is None:
+				<form id="signin" class="navbar-form navbar-right" role="form">
+					<div class="input-group">
+						<span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
+						<input id="email" type="email" class="form-control" name="email" value="" placeholder="Email Address">                                        
+					</div>
+
+					<div class="input-group">
+						<span class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></span>
+						<input id="password" type="password" class="form-control" name="password" value="" placeholder="Password">                                        
+					</div>
+
+					<button type="submit" onclick="login1(event)" class="btn btn-primary">Login</button>
+				</form>
+				% else:
 				<form id="signout" class="navbar-form navbar-right" role="form" style="color:azure">
 					Logged in as:&nbsp;{{email}}
-					<button type="submit" onclick="showUp(event)" class="btn btn-primary">Upload</button>
 					<button type="submit" onclick="logout(event)" class="btn btn-primary">Logout</button>
 				</form>
 				% end
-            </div>
             <!-- /.navbar-collapse -->
         </div>
         <!-- /.container -->
     </nav>
+	<!-- Modal for Register-->
+	<div id="experiment" class="modal fade" role="dialog" tabindex="-1" aria-labelledby="myModalLabel" aria-hidden="true"></div>
+	<!--http://bootsnipp.com/snippets/8VmZ-->
+	<div id="regModal" class="modal fade" role="dialog" tabindex="-1" aria-labelledby="myModalLabel" aria-hidden="true">
+		<div class="modal-dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+			<div class="modal-content">
+				<div class="modal-header">
+					<legend> 
+						<img style="max-width:75px; margin-top: -7px;"src="/static/css/aww/logo.png">&nbsp;&nbsp;&nbsp;Sign up!
+					</legend>
+				</div>
+				<div id="entry_fields" class="modal-body">
+					<form id="regForm" class="form" role="form" method="POST">
+						<input id="newEmail" class="form-control" name="email" placeholder="Your Email" type="email" />
+						<input id="reNewEmail" class="form-control" name="reenteremail" placeholder="Re-enter Email" type="email" />
+						<input id="newPass" class="form-control" name="password" placeholder="New Password" type="password" />
+						<input id="reNewPass" class="form-control" name="reenterpassword" placeholder="Re-enter Password" type="password" />
 
+						<button class="btn btn-lg btn-primary btn-block" onclick="register(event)" type="submit">Sign up</button>	
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	
     <!-- Page Content -->
     <div class="container">
-
+		
         <!-- Portfolio Item Heading -->
         <div class="row">
             <div class="col-lg-12">
+				<br/><br/>
+				<form id="search" class="navbar-form navbar-right" role="form">
+					<strong>Search for profiles:</strong>
+					<input id="name" class="form-control" name="name" placeholder="Enter Profile Name" type="text" />
+					<button type="submit" onclick="search(event)" class="btn btn-primary">Search</button>
+				</form>
                 <h1 class="page-header">
                     {{user if nickname is None else nickname}} <small>Hall of fame points: {{len(walloffame_picids or [])}}</small>
                 </h1>	
@@ -116,12 +168,17 @@
         <!-- Portfolio Item Row -->
         <div class="row">
             <div class="col-sm-3">
-                <img class="img-responsive" src="/pic/profile/{{user}}" alt="">
+			<div>
+                <img id="profilePic" class="img-responsive" src="/pic/profile/{{user}}" alt="">
+				<span id="labelSpan" class="label label-default rank-label">Points: {{len(walloffame_picids or [])}}</span>
+			</div>
+				% if email is not None and email == user:
 				<button type="button" class="btn btn-primary" data-toggle="modal" href="#profModal" data-backdrop="true" style="margin-top:5px">Edit profile</button>
+				% end
             </div>
 
             <div class="col-md-4">
-                <h3>Description</h3>
+                <h3>Description:</h3>
 				<p>{{description}}</p>
             </div>
 

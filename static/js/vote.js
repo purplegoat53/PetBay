@@ -1,17 +1,13 @@
 function vote(picid, voteType) {
-	alert(picid);
+	//alert(picid);
 	
 	$.post("/ajax/vote/"+voteType,
     {
         picid : picid
     },
     function(data, status){
-        alert("Data: " + data.message + "\nStatus: " + status);
-		if(data.message === "Already Voted")
-		{
-			
-		}
-		else {
+        //alert("Data: " + data.message + "\nStatus: " + status);
+		if(data.status == "OK") {
 			window.location.reload();
 		}
     });
@@ -57,7 +53,6 @@ function upload3(event){
         processData: false
     }).done(function(data) {
 		$('#upModal').modal('hide');
-		//alert("Kate is Slightly Less Gay than before Gay");		
 		//window.location.reload();
 		$.get("/", function(data, status){
         document.body.parentNode.innerHTML = data;
@@ -66,8 +61,10 @@ function upload3(event){
 		$("#entry_fieldsg").html("Upload Successful!");
 		setTimeout(function (){
 			//window.location.reload();
-			//$("#upModal").modal("hide");
-			$("#entry_fieldsg").html(orig_html);
+			$("#upModal").modal("hide");
+			setTimeout(function() {
+				$("#entry_fieldsg").html(orig_html);
+			}, 500);
 		}, 1000);
     });
 	});
@@ -92,5 +89,3 @@ setInterval(function() {
 		event.stopPropagation();
 	});
 }, 3000);*/
-
-

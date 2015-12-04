@@ -28,10 +28,10 @@ function updateProf(event) {
         //success: completeHandler,
         //error: errorHandler,
         // Form data
-        data: formData,
-		nickname: nickname,
-		description: description,
-		upload: pic,
+		data: formData,
+		//nickname: nickname,
+		//description: description,
+		//upload: pic,
         //Options to tell jQuery not to process data or worry about content-type.
         cache: false,
         contentType: false,

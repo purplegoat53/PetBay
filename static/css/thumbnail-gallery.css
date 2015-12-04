@@ -12,6 +12,8 @@ body {
 	-moz-background-size: cover;
 	-o-background-size: cover;
 	background-size: cover;
+	
+	text-decoration: none;
 }
 
 .thumb {
@@ -20,4 +22,17 @@ body {
 
 footer {
     margin: 50px 0;
+}
+
+#profilePic {
+	border: 2px solid #f7f6d4;
+	border-radius: 5%;
+}
+
+#labelSpan {
+	background-color: #f7f6d4;
+    padding: 5px 10px 5px 10px;
+    border-radius: 27px;
+	color:Black;
+	margin-left:38%;
 }

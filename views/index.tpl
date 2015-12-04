@@ -12,6 +12,7 @@
 	<script src="/static/js/login.js"></script>
 	<script src="/static/js/vote.js"></script>
 	<script src="/static/js/timer.js"></script>
+	<script src="/static/js/search.js"></script>
 
 
     <title>PetBay</title>
@@ -56,10 +57,11 @@
                     <li>
                         <a href="/halloffame">Hall of Fame</a>
                     </li>
+					% if email is not None:
                     <li>
                         <a href="/profile">Profile</a>
                     </li>
-					% if email is None:
+					% else:
 					<li>
 						<a data-toggle="modal" href="#regModal" data-backdrop="true" >Register</a>
 					</li>
@@ -155,15 +157,27 @@
         <div class="row">
 
             <div class="col-lg-12">
+				<br/><br/>
+				<form id="search" class="navbar-form navbar-right" role="form">
+					<strong>Search for profiles:</strong>
+					<input id="name" class="form-control" name="name" placeholder="Enter Profile Name" type="text" />
+					<button type="submit" onclick="search(event)" class="btn btn-primary">Search</button>
+				</form>
                 <h1 class="page-header">Recently cuddled</h1>					
             </div>
 			<div id="ajax">
 			</div>
 			% for picid in sorted(pics, key=lambda key: -pics[key]["time_added"]):
 			% 	pic = pics[picid]
+			<!-- lightbox modal -->
+			<div id="lightboxModal{{picid}}" class="modal fade" role="dialog" tabindex="-1" aria-hidden="true">
+				<div class="modal-dialog" aria-hidden="true">
+					<img src="/pic/orig/{{pic['picid']}}" class="img-responsive" alt="" style="max-width:800px;max-height:600px;">
+				</div>
+			</div>
             <div class="col-lg-3 col-md-4 col-xs-6 thumb">
 				<div class="thumbnail">
-					<a class="thumbnail" href="#">
+					<a class="thumbnail" href="#lightboxModal{{picid}}" data-toggle="modal" data-backdrop="true">
 						<img class="img-responsive" src="/pic/thumb/{{picid}}" style="height:200px; object-fit:cover" alt="">
 					</a>
 					Cuddles:{{pic["votes"]}}
@@ -175,11 +189,13 @@
 					</button>
 					<br/>
 					<span class="timer" data-time_left={{pic["ttl(data)"]}}>00:00:00</span> <span style="font-size: 12px">until <strong>THE END</strong></span>
+					<br/>
+					by: <a href="/profile/{{pic['user_email']}}">{{pic['user_email']}}</a>
                 </div>
             </div>
 			% end
         </div>
-		
+		<!--
 		<ul class="pagination pagination-sm">
 		  <li><a href="?page=1">1</a></li>
 		  <li><a href="?page=2">2</a></li>
@@ -187,7 +203,7 @@
 		  <li><a href="?page=4">4</a></li>
 		  <li><a href="?page=5">5</a></li>
 		</ul>
-		
+		-->
         <hr>
 
         <!-- Footer -->

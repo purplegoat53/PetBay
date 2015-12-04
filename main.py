@@ -2,7 +2,17 @@ from bottle import route, template, run, static_file, request, response, view
 from bottle import install, abort, redirect
 
 from PIL import Image
-import cassandra, time, random, hashlib, mimetypes, uuid, StringIO, functools, os, threading
+import cassandra
+import time
+import random
+import hashlib
+import mimetypes
+import uuid
+import StringIO
+import functools
+import os
+import re
+import threading
 
 def setup_db(cassandra):
 	session = cassandra.getsession()
@@ -33,6 +43,14 @@ def set_interval(interval):
         return wrapper
     return decorator
 
+def is_valid_uuid(uuid, no_dashes=False):
+	" returns whether or not passed in str is uuid "
+	if no_dashes and re.match("^[0-9a-f]{32}$", uuid, re.I):
+		return True
+	elif not no_dashes and re.match("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", uuid, re.I):
+		return True
+	return False
+
 def get_str_from_uuid(uuid):
 	" returns uuid with dashes as string "
 	return uuid.urn.split(":")[-1]
@@ -50,7 +68,7 @@ def get_user(callback):
 		kwargs["email"] = None
 
 		session_id = request.get_cookie("pbsession")
-		if session_id is not None:
+		if session_id is not None and is_valid_uuid(session_id, no_dashes=True):
 			prepared = db.prepare("select * from PetBay.Session where sessionid=?")
 			rows = db.execute(prepared, (uuid.UUID(session_id),))
 			if len(rows) > 0:
@@ -100,12 +118,18 @@ def get_new(db):
 @view("index")
 @get_user
 def get_index(db, email):
+	#row, = db.execute("select count(*) from PetBay.Pic")
+
+	#return {"pics": get_pics(db, "Pic"), "email": email, "total_pics": row["count"]}
 	return {"pics": get_pics(db, "Pic"), "email": email}
 
 @route("/halloffame")
 @view("halloffame")
 @get_user
 def get_halloffame(db, email):
+	#row, = db.execute("select count(*) from PetBay.WallOfFame")
+
+	#return {"pics": get_pics(db, "WallOfFame"), "email": email, "total_pics": row["count"]}
 	return {"pics": get_pics(db, "WallOfFame"), "email": email}
 
 @route("/profile")
@@ -157,7 +181,7 @@ def perform_login(db):
 @route("/ajax/logout")
 def perform_logout(db):	
 	session_id = request.get_cookie("pbsession")
-	if session_id is None:
+	if session_id is None or not is_valid_uuid(session_id, no_dashes=True):
 		return
 	
 	# this will logout user from all browsers.. (what we want?)
@@ -296,6 +320,9 @@ def perform_update_profile(db, email):
 	
 @route("/pic/orig/<picid>")
 def get_pic_original(picid, db):
+	if not is_valid_uuid(picid):
+		abort(500)
+
 	prepared = db.prepare("select * from PetBay.Pic where picid=?")
 	rows = db.execute(prepared, (uuid.UUID(picid),))
 
@@ -308,6 +335,9 @@ def get_pic_original(picid, db):
 
 @route("/pic/thumb/<picid>")
 def get_pic_thumb(picid, db):
+	if not is_valid_uuid(picid):
+		abort(500)
+
 	prepared = db.prepare("select * from PetBay.Pic where picid=?")
 	rows = db.execute(prepared, (uuid.UUID(picid),))
 
@@ -336,6 +366,9 @@ def get_pic_profile(email, db):
 
 @route("/pic/halloffame/thumb/<picid>")
 def get_pic_halloffame_thumb(picid, db):
+	if not is_valid_uuid(picid):
+		abort(500)
+
 	prepared = db.prepare("select * from PetBay.WallOfFame where picid=?")
 	rows = db.execute(prepared, (uuid.UUID(picid),))
 
@@ -348,6 +381,9 @@ def get_pic_halloffame_thumb(picid, db):
 	
 @route("/pic/halloffame/orig/<picid>")
 def get_pic_original(picid, db):
+	if not is_valid_uuid(picid):
+		abort(500)
+
 	prepared = db.prepare("select * from PetBay.WallOfFame where picid=?")
 	rows = db.execute(prepared, (uuid.UUID(picid),))
 
@@ -369,7 +405,11 @@ def perform_vote(vote, db, email):
 	else:
 		up_vote = (vote == "up")
 	
-	picid = uuid.UUID(request.forms.get("picid"))
+	picid = request.forms.get("picid")
+	if not is_valid_uuid(picid):
+		abort(500)
+	
+	picid = uuid.UUID(picid)
 	
 	prepared = db.prepare("select * from PetBay.Pic where picid=?")
 	rows = db.execute(prepared, (picid,))
@@ -420,7 +460,7 @@ def perform_vote(vote, db, email):
 def get_welcome(db, email):
 	return {"email": email}
 
-@set_interval(60)
+@set_interval(15)
 def move_to_halloffame(db):
 	""" cron job, moves about to expire sucessful new
 		hall of fame entries to the hall of fame """
@@ -429,7 +469,7 @@ def move_to_halloffame(db):
 	rows = db.execute("select picid, user_email, ttl(data) from PetBay.Pic")
 	
 	# filter out those about to be destroyed
-	rows = filter(lambda row: row["ttl(data)"] < 120, rows)
+	rows = filter(lambda row: row["ttl(data)"] < 30, rows)
 	
 	for row in rows:
 		prepared = db.prepare("select * from PetBay.Votes where picid=?")
@@ -440,7 +480,7 @@ def move_to_halloffame(db):
 		vote, = votes
 		score = (vote["votes_up"] or 0) - (vote["votes_down"] or 0)
 		
-		if score < 1:
+		if score < 2:
 			# not high enough
 			continue
 	
