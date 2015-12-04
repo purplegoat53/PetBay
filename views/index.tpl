@@ -163,7 +163,7 @@
 					<input id="name" class="form-control" name="name" placeholder="Enter Profile Name" type="text" />
 					<button type="submit" onclick="search(event)" class="btn btn-primary">Search</button>
 				</form>
-                <h1 class="page-header">Recently cuddled</h1>					
+                <h1 class="page-header">Waiting for cuddles...</h1>					
             </div>
 			<div id="ajax">
 			</div>

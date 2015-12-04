@@ -32,6 +32,7 @@ class CassandraPlugin(object):
 		ip, port = self.host
 		self.cluster = Cluster([ip], port=port)
 		self.session = self.cluster.connect(self.keyspace)
+		self.session.row_factory = dict_factory
 
 	def close(self):
 		self.cluster.shutdown()
@@ -41,7 +42,6 @@ class CassandraPlugin(object):
 			return callback
 
 		def wrapper(*args, **kwargs):
-			self.session.row_factory = dict_factory
 			kwargs[self.keyword] = self.session
 
 			return callback(*args, **kwargs)

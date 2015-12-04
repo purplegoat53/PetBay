@@ -10,6 +10,10 @@ function updateProf(event) {
 	var nickname = document.getElementById("nickname").value;
 	var description = document.getElementById("description").value;
 	var pic = document.getElementById("input-1");
+	if(nickname.length <= 0)
+		formData.delete("nickname");
+	if(description.length <= 0)
+		formData.delete("description");
 	document.getElementById("proBar").style.display = "block";
 	event.preventDefault();
 	event.stopPropagation();

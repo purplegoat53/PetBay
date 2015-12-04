@@ -34,7 +34,7 @@ def set_interval(interval):
 
             def loop(): # executed in another thread
                 while not stopped.wait(interval): # until stopped
-                    function(*args, **kwargs)
+					function(*args, **kwargs)
 
             t = threading.Thread(target=loop)
             t.daemon = True # stop if the program exits
@@ -269,7 +269,7 @@ def perform_upload(db, email):
 	thumb.save(thumb_data, format="JPEG")
 	
 	picid = cassandra.util.uuid_from_time(time.time())
-	prepared = db.prepare("insert into PetBay.Pic(picid, user_email, data, data_thumb, mime, time_added) values (?, ?, ?, ?, ?, ?) if not exists using ttl 240")
+	prepared = db.prepare("insert into PetBay.Pic(picid, user_email, data, data_thumb, mime, time_added) values (?, ?, ?, ?, ?, ?) if not exists using ttl 60")
 	db.execute(prepared, (picid, email, orig_data.getvalue(), thumb_data.getvalue(), "image/jpeg", int(time.time())))
 	
 	prepared = db.prepare("update PetBay.User set picids = picids + {" + get_str_from_uuid(picid) + "} where email=?")
@@ -460,7 +460,7 @@ def perform_vote(vote, db, email):
 def get_welcome(db, email):
 	return {"email": email}
 
-@set_interval(15)
+@set_interval(5)
 def move_to_halloffame(db):
 	""" cron job, moves about to expire sucessful new
 		hall of fame entries to the hall of fame """
@@ -469,7 +469,7 @@ def move_to_halloffame(db):
 	rows = db.execute("select picid, user_email, ttl(data) from PetBay.Pic")
 	
 	# filter out those about to be destroyed
-	rows = filter(lambda row: row["ttl(data)"] < 30, rows)
+	rows = filter(lambda row: row["ttl(data)"] < 10, rows)
 	
 	for row in rows:
 		prepared = db.prepare("select * from PetBay.Votes where picid=?")

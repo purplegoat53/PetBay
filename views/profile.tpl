@@ -146,8 +146,8 @@
 				</div>
 				<div id="updateDiv" class="modal-body">
 					<form id="uploader" enctype="multipart/form-data">
-						<input id="nickname" class="form-control" name="nickname" placeholder="User name" type="user" /><br>
-						<input id="description" class="form-control" name="description" placeholder="Description" type="description" /><br>
+						<input id="nickname" class="form-control" name="nickname" placeholder="User name" type="user" value="{{nickname or ""}}" /><br>
+						<input id="description" class="form-control" name="description" placeholder="Description" type="description" value="{{description or ""}}" /><br>
 						<div style="position:relative;">
 						<a class='btn btn-primary' href='javascript:;'>
 						Choose File...
